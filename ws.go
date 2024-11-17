@@ -76,7 +76,7 @@ func GopheRPC(mux mux) {
 	mux.HandleFunc(path.Join("/", basepath, "ws"), wsHandler)
 	mux.HandleFunc(path.Join("/", basepath, gopherpcJsName), func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
-		// w.Header().Set("Cache-Control", "public, max-age=31536000")
+		w.Header().Set("Cache-Control", "public, max-age=31536000")
 		_, _ = w.Write(gopherpcJs)
 	})
 }
