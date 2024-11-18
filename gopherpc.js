@@ -1,6 +1,8 @@
 const url = new URL(window.location.href);
-url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-url.pathname = url.pathname.split('__gopherpc__')[0] + '__gopherpc__/ws';
+{
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.pathname = '__gopherpc__/ws';
+}
 
 const ws = new WebSocket(url.href);
 const respQueue = new Map();

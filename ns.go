@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type AnyFunc func(context.Context, []any) (any, error)
+type AnyFunc func(ctx context.Context, args ...interface{}) (interface{}, error)
 
 var ns = map[string]AnyFunc{}
 

@@ -25,7 +25,7 @@ func init() {
 func ImportJs() string {
 	return fmt.Sprintf(
 		`<script src="%s" integrity="%s" crossorigin="anonymous"></script>`,
-		path.Join("/", basepath, gopherpcJsName),
+		path.Join("/", "__gopherpc__", gopherpcJsName),
 		gopherJsIntegrity,
 	)
 }

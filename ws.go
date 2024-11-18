@@ -14,7 +14,6 @@ var (
 			return true
 		},
 	}
-	basepath string = "__gopherpc__"
 )
 
 type (
@@ -68,13 +67,9 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SetBasepath(p string) {
-	basepath = path.Join(p, "__gopherpc__")
-}
-
 func GopheRPC(mux mux) {
-	mux.HandleFunc(path.Join("/", basepath, "ws"), wsHandler)
-	mux.HandleFunc(path.Join("/", basepath, gopherpcJsName), func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(path.Join("/", "__gopherpc__", "ws"), wsHandler)
+	mux.HandleFunc(path.Join("/", "__gopherpc__", gopherpcJsName), func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Header().Set("Cache-Control", "public, max-age=31536000")
 		_, _ = w.Write(gopherpcJs)
