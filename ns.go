@@ -1,11 +1,11 @@
 package gopherpc
 
 import (
-	"context"
 	"fmt"
+	"net/http"
 )
 
-type AnyFunc func(ctx context.Context, args ...interface{}) (interface{}, error)
+type AnyFunc func(r *http.Request, args []any) (any, error)
 
 var ns = map[string]AnyFunc{}
 
@@ -13,7 +13,7 @@ func Register(name string, f AnyFunc) {
 	ns[name] = f
 }
 
-func call(ctx context.Context, name string, args []any) (res any, err error) {
+func call(r *http.Request, name string, args []any) (res any, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("function %q panic: %v", name, r)
@@ -22,7 +22,7 @@ func call(ctx context.Context, name string, args []any) (res any, err error) {
 	}()
 
 	if f, ok := ns[name]; ok {
-		res, err = f(ctx, args)
+		res, err = f(r, args)
 		return
 	}
 

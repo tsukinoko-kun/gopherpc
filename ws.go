@@ -33,8 +33,12 @@ type (
 		Id    string `json:"id"`
 	}
 
-	mux interface {
-		HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
+	muxHandleFunc interface {
+		HandleFunc(pattern string, handler http.HandlerFunc)
+	}
+
+	muxGet interface {
+		Get(pattern string, handler http.HandlerFunc)
 	}
 )
 
@@ -57,7 +61,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		res, err := call(r.Context(), req.FuncName, req.Args)
+		res, err := call(r, req.FuncName, req.Args)
 		if err != nil {
 			_ = conn.WriteJSON(rpcError{Error: err.Error(), Id: req.Id})
 			continue
@@ -67,11 +71,18 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GopheRPC(mux mux) {
-	mux.HandleFunc(path.Join("/", "__gopherpc__", "ws"), wsHandler)
-	mux.HandleFunc(path.Join("/", "__gopherpc__", gopherpcJsName), func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/javascript")
-		w.Header().Set("Cache-Control", "public, max-age=31536000")
-		_, _ = w.Write(gopherpcJs)
-	})
+func jsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/javascript")
+	w.Header().Set("Cache-Control", "public, max-age=31536000")
+	_, _ = w.Write(gopherpcJs)
+}
+
+func HandleFunc(mux muxHandleFunc) {
+	mux.HandleFunc("/__gopherpc__/ws", wsHandler)
+	mux.HandleFunc(path.Join("/__gopherpc__", gopherpcJsName), jsHandler)
+}
+
+func Get(mux muxGet) {
+	mux.Get("/__gopherpc__/ws", wsHandler)
+	mux.Get(path.Join("/__gopherpc__", gopherpcJsName), jsHandler)
 }
