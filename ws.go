@@ -34,7 +34,11 @@ type (
 	}
 
 	muxHandleFunc interface {
-		HandleFunc(pattern string, handler http.HandlerFunc)
+		HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
+	}
+
+	muxHandle interface {
+		Handle(pattern string, handler http.Handler)
 	}
 
 	muxGet interface {
@@ -80,6 +84,11 @@ func jsHandler(w http.ResponseWriter, r *http.Request) {
 func HandleFunc(mux muxHandleFunc) {
 	mux.HandleFunc("/__gopherpc__/ws", wsHandler)
 	mux.HandleFunc(path.Join("/__gopherpc__", gopherpcJsName), jsHandler)
+}
+
+func Handle(mux muxHandle) {
+	mux.Handle("/__gopherpc__/ws", http.HandlerFunc(wsHandler))
+	mux.Handle(path.Join("/__gopherpc__", gopherpcJsName), http.HandlerFunc(jsHandler))
 }
 
 func Get(mux muxGet) {
