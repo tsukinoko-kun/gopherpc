@@ -2,6 +2,8 @@
 
 GopheRPC is a RPC library that lets you call Go server functions from your JavaScript (browser) clients.
 
+<img src="gopherpc.svg" width="200">
+
 ```go
 package main
 
