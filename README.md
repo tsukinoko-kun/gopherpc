@@ -45,3 +45,30 @@ func main() {
 	}
 }
 ```
+
+## Args
+
+Use `gopherpc.Unmarshal` to parse your `[]any` args into a struct.
+
+The order of the args is the same as the order of the fields in the struct.  
+You can override this by using the `index` tag.
+
+```go
+type Args struct {
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Loaded bool   `json:"loaded" index:"-"`
+	Phone  string `json:"phone" index:"2"`
+}
+```
+
+```go
+gopherpc.Register("foo", func(ctx context.Context, args []any) (any, error) {
+	var a Args
+	if err := gopherpc.Unmarshal(args, &a); err != nil {
+		return nil, err
+	}
+
+	return a.Name + " " + a.Email + " " + a.Phone, nil
+})
+```

@@ -6,14 +6,25 @@ import (
 	"strconv"
 )
 
-// parse args and match args[i] to v label `index:"i"`
+// Parse args from GopheRPC registered function call into struct
 func Unmarshal(args []any, v any) error {
+	if reflect.TypeOf(v).Kind() != reflect.Ptr {
+		return fmt.Errorf("v must be a pointer")
+	}
 	for i := 0; i < reflect.ValueOf(v).Elem().NumField(); i++ {
 		field := reflect.ValueOf(v).Elem().Field(i)
 		tag := reflect.TypeOf(v).Elem().Field(i).Tag.Get("index")
-		index, err := strconv.Atoi(tag)
-		if err != nil {
-			return err
+		var index int
+		if tag == "-" {
+			continue
+		} else if tag == "" {
+			index = i
+		} else {
+			var err error
+			index, err = strconv.Atoi(tag)
+			if err != nil {
+				return err
+			}
 		}
 		if index >= len(args) {
 			return fmt.Errorf("index out of range")
