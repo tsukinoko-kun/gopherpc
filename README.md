@@ -55,10 +55,10 @@ You can override this by using the `index` tag.
 
 ```go
 type Args struct {
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	Loaded bool   `json:"loaded" index:"-"`
-	Phone  string `json:"phone" index:"2"`
+	Name   string
+	Email  string
+	Loaded bool   `index:"-"`
+	Phone  string `index:"2"`
 }
 ```
 
