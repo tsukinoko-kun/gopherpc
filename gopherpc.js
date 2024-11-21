@@ -55,13 +55,26 @@ function gopherpcCallId() {
     return Math.random().toString(36).substring(2);
 }
 
-let { ws, prom } = newWs();
+/** @type {WebSocket} */
+let ws = { readyState: WebSocket.CLOSED, close: () => { } };
+/** @type {Promise<void>} */
+let prom = Promise.resolve();
 
 window.addEventListener("beforeunload", () => {
     ws.close();
 });
 
-globalThis.goWs = () => ws;
+let disconnectTimeout = -1;
+function retriggerTimeout() {
+    if (disconnectTimeout != -1) {
+        clearTimeout(disconnectTimeout);
+    }
+    disconnectTimeout = setTimeout(() => {
+        disconnectTimeout = -1;
+        ws.close();
+    }, 10_000);
+}
+
 globalThis.gopherpc = new Proxy({}, {
     get(_, property) {
         return async (...args) => {
@@ -77,6 +90,7 @@ globalThis.gopherpc = new Proxy({}, {
             const expProm = explodedPromise();
             respQueue.set(id, expProm);
             ws.send(JSON.stringify({ func_name: property, args, id }));
+            retriggerTimeout();
             return await expProm.promise;
         };
     }
