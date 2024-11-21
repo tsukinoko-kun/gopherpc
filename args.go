@@ -47,7 +47,7 @@ func Unmarshal(args []any, v any) error {
 			case reflect.Bool:
 				field.SetBool(args[index].(bool))
 			default:
-				return fmt.Errorf("type not match")
+                field.Set(reflect.ValueOf(args[index]))
 			}
 		}
 	}
