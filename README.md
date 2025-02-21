@@ -14,7 +14,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/tsukinoko-kun/gopherpc"
+	"github.com/tsukinoko-kun/gopherpc/v2"
 )
 
 func main() {
