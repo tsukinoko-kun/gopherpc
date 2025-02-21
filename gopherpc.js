@@ -1,97 +1,28 @@
-const respQueue = new Map();
-
-function explodedPromise() {
-    let resolve, reject;
-    const promise = new Promise((res, rej) => {
-        resolve = res;
-        reject = rej;
-    });
-    return { promise, resolve, reject };
-}
-
-function newWs() {
-    const url = new URL(window.location.href);
-    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-    url.pathname = '/__gopherpc__/ws';
-
-    console.debug('GopheRPC connecting', url.href);
-
-    const prom = explodedPromise();
-    const ws = new WebSocket(url.href);
-
-    ws.addEventListener("open", () => {
-        prom.resolve();
-        console.debug('GopheRPC connected');
-    });
-
-    ws.addEventListener("close", () => {
-        console.debug('GopheRPC disconnected');
-    });
-
-    ws.addEventListener("error", (event) => {
-        prom.reject(event);
-        console.error('GopheRPC error', event);
-    });
-
-    ws.addEventListener("message", (event) => {
-        const { id, result, error } = JSON.parse(event.data);
-        const { resolve, reject } = respQueue.get(id);
-        if (error) {
-            reject(new Error(error));
-        } else {
-            resolve(result);
-        }
-        respQueue.delete(id);
-    });
-
-    if (ws.readyState === WebSocket.OPEN) {
-        prom.resolve();
-    }
-
-    return { ws, prom: prom.promise };
-}
-
-function gopherpcCallId() {
-    return Math.random().toString(36).substring(2);
-}
-
-/** @type {WebSocket} */
-let ws = { readyState: WebSocket.CLOSED, close: () => { } };
-/** @type {Promise<void>} */
-let prom = Promise.resolve();
-
-window.addEventListener("beforeunload", () => {
-    ws.close();
-});
-
-let disconnectTimeout = -1;
-function retriggerTimeout() {
-    if (disconnectTimeout != -1) {
-        clearTimeout(disconnectTimeout);
-    }
-    disconnectTimeout = setTimeout(() => {
-        disconnectTimeout = -1;
-        ws.close();
-    }, 10_000);
-}
-
-globalThis.gopherpc = new Proxy({}, {
+globalThis.gopherpc = new Proxy(
+  {},
+  {
     get(_, property) {
-        return async (...args) => {
-            switch (ws.readyState) {
-                case WebSocket.CLOSING:
-                case WebSocket.CLOSED:
-                    ({ ws, prom } = newWs());
-                case WebSocket.CONNECTING:
-                    await prom;
-                    break;
-            }
-            const id = gopherpcCallId();
-            const expProm = explodedPromise();
-            respQueue.set(id, expProm);
-            ws.send(JSON.stringify({ func_name: property, args, id }));
-            retriggerTimeout();
-            return await expProm.promise;
-        };
-    }
-});
+      return async (...args) => {
+        const resp = await fetch("/__gopherpc__/rpc", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ func_name: property, args }),
+          cache: "no-cache",
+        });
+        const o = await resp.json();
+        if ("type" in o) {
+          switch (o.type) {
+            case "error":
+              throw new Error(o.error ?? o);
+            case "ok":
+              return o;
+          }
+        }
+        throw new Error("unexpected response: " + JSON.stringify(o));
+      };
+    },
+  },
+);
