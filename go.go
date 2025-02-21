@@ -30,7 +30,8 @@ type (
 		Handle(pattern string, handler http.Handler)
 	}
 
-	muxGet interface {
+	muxGetPost interface {
+		Post(pattern string, handler http.HandlerFunc)
 		Get(pattern string, handler http.HandlerFunc)
 	}
 )
@@ -43,7 +44,7 @@ func handlerFuncRpc(w http.ResponseWriter, r *http.Request) {
 	if err := jr.Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		jw := json.NewEncoder(w)
-		jw.Encode(rpcError{Error: err.Error(), Type: "error"})
+		_ = jw.Encode(rpcError{Error: err.Error(), Type: "error"})
 		return
 	}
 
@@ -51,11 +52,11 @@ func handlerFuncRpc(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		jw := json.NewEncoder(w)
-		jw.Encode(rpcError{Error: err.Error(), Type: "error"})
+		_ = jw.Encode(rpcError{Error: err.Error(), Type: "error"})
 		return
 	} else {
 		jw := json.NewEncoder(w)
-		jw.Encode(rpcResponse{Result: res, Type: "ok"})
+		_ = jw.Encode(rpcResponse{Result: res, Type: "ok"})
 	}
 }
 
@@ -75,7 +76,7 @@ func Handle(mux muxHandle) {
 	mux.Handle(path.Join("/__gopherpc__", gopherpcJsName), http.HandlerFunc(handlerFuncJs))
 }
 
-func Get(mux muxGet) {
-	mux.Get("/__gopherpc__/rpc", handlerFuncRpc)
+func Get(mux muxGetPost) {
+	mux.Post("/__gopherpc__/rpc", handlerFuncRpc)
 	mux.Get(path.Join("/__gopherpc__", gopherpcJsName), handlerFuncJs)
 }
