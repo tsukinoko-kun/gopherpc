@@ -18,7 +18,7 @@ globalThis.gopherpc = new Proxy(
             case "error":
               throw new Error(o.error ?? o);
             case "ok":
-              return o;
+              return o.result;
           }
         }
         throw new Error("unexpected response: " + JSON.stringify(o));
