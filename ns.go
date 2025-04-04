@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -25,7 +26,15 @@ func Types() string {
 	ts.WriteString("export {};\n")
 	ts.WriteString("declare global {\n")
 	ts.WriteString("  const gopherpc: {\n")
+
+	keys := make([]string, 0, len(ns))
 	for name := range ns {
+		keys = append(keys, name)
+	}
+
+	sort.Strings(keys)
+
+	for _, name := range keys {
 		if t, ok := nsTyps[name]; ok {
 			ts.WriteString(fmt.Sprintf("    %q: %s;\n", name, t))
 		} else {
